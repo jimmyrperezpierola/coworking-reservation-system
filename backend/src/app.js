@@ -63,48 +63,90 @@ const hashPassword = async (password) => {
 };
 
 // RUTAS DE AUTENTICACIÓN
+/**
+ * @route POST /login
+ * @description Autentica un usuario y devuelve un token JWT
+ * @access Public
+ * @param {string} email - Email del usuario
+ * @param {string} password - Contraseña del usuario
+ * @returns {Object} - Token JWT y datos básicos del usuario
+ * @throws {400} - Si faltan email o contraseña
+ * @throws {401} - Si las credenciales son inválidas
+ * @throws {500} - Error del servidor
+ */
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validación básica
+    // 1. Validación de campos requeridos
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email y contraseña requeridos' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Email y contraseña son requeridos',
+        code: 'AUTH_MISSING_FIELDS'
+      });
     }
 
-    const user = await User.findOne({ where: { email } });
+    // 2. Buscar usuario en la base de datos
+    const user = await User.findOne({ 
+      where: { email },
+      attributes: ['id', 'email', 'password', 'isAdmin', 'createdAt'] // Solo los campos necesarios
+    });
+
     if (!user) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.status(401).json({
+        success: false,
+        error: 'Credenciales inválidas',
+        code: 'AUTH_INVALID_CREDENTIALS'
+      });
     }
 
+    // 3. Comparar contraseñas hasheadas
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(401).json({ error: 'Credenciales inválidas' });
+      return res.status(401).json({
+        success: false,
+        error: 'Credenciales inválidas',
+        code: 'AUTH_INVALID_CREDENTIALS'
+      });
     }
 
+    // 4. Generar token JWT
     const token = jwt.sign(
-      { 
-        id: user.id, 
-        email: user.email, 
-        isAdmin: user.isAdmin 
+      {
+        id: user.id,
+        email: user.email,
+        isAdmin: user.isAdmin
       },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      {
+        expiresIn: '1h',
+        issuer: 'your-app-name', // Identificador de tu app
+        audience: 'web-app' // Para quién es el token
+      }
     );
 
+    // 5. Responder con datos seguros del usuario
     res.json({
+      success: true,
       token,
       user: {
         id: user.id,
         email: user.email,
         isAdmin: user.isAdmin,
         createdAt: user.createdAt
-      }
+      },
+      expiresIn: 3600 // Tiempo de expiración en segundos
     });
 
   } catch (error) {
-    console.error('Error en login:', error);
-    res.status(500).json({ error: 'Error en el servidor' });
+    console.error('[AUTH ERROR]', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error en el servidor',
+      code: 'SERVER_ERROR',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

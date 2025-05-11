@@ -1,0 +1,92 @@
+[
+    {
+        "id": 1,
+        "name": "Sala de Reuniones 1",
+        "description": "Descripción del Espacio 1",
+        "capacity": 50,
+        "type": "meeting room",
+        "available": true,
+        "price": 100
+    },
+    {
+        "id": 2,
+        "name": "Escritorio para  4",
+        "description": "Descripción del Espacio 2",
+        "capacity": 4,
+        "type": "desktop",
+        "available": false,
+        "price": 50
+    },
+    {
+        "id": 3,
+        "name": "Sala de Reuniones 2",
+        "description": "Descripción del Espacio 3",
+        "capacity": 30,
+        "type": "meeting room",
+        "available": true,
+        "price": 100
+    },
+    {
+        "id": 4,
+        "name": "Escritorio para  10",
+        "description": "Descripción del Espacio 4",
+        "capacity": 10,
+        "type": "desktop",
+        "available": false,
+        "price": 50
+    },
+    {
+        "id": 5,
+        "name": "Sala de Reuniones 3",
+        "description": "Descripción del Espacio 5",
+        "capacity": 20,
+        "type": "meeting room",
+        "available": true,
+        "price": 100
+    },
+    {
+        "id": 6,
+        "name": "Escritorio para  2",
+        "description": "Descripción del Espacio 6",
+        "capacity": 2,
+        "type": "desktop",
+        "available": false,
+        "price": 50
+    },
+    {
+        "id": 7,
+        "name": "Sala de Reuniones 4",
+        "description": "Descripción del Espacio 7",
+        "capacity": 15,
+        "type": "meeting room",
+        "available": true,
+        "price": 100
+    },
+    {
+        "id": 8,
+        "name": "Escritorio para 1",
+        "description": "Descripción del Espacio 8",
+        "capacity": 1,
+        "type": "desktop",
+        "available": false,
+        "price": 50
+    },
+    {
+        "id": 9,
+        "name": "Sala de Reuniones 5",
+        "description": "Descripción del Espacio 9",
+        "capacity": 25,
+        "type": "meeting room",
+        "available": true,
+        "price": 100
+    },
+    {
+        "id": 10,
+        "name": "Escritorio para  3",
+        "description": "Descripción del Espacio 10",
+        "capacity": 3,
+        "type": "desktop",
+        "available": false,
+        "price": 50
+    }
+]

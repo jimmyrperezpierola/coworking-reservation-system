@@ -1,0 +1,87 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+/* .logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+} */
+
+/* .card {
+  padding: 2em;
+} */
+
+.box {
+  border: 1px solid #0da9d8;
+  border-radius: 4px;
+  padding: 1em;
+  margin: 1em 0;
+  background-color: #424242;
+}
+
+.divider {
+  margin-left: 2x;
+  display: inline-block;
+  width: 6px;
+}
+
+.container {
+    display: 'flex';
+    flex-wrap: 'wrap';
+    gap: '20px';
+    justify-content: 'center';
+    padding: '20px';
+}
+
+.card {
+    flex: '1 1 calc(33.333% - 20px)';
+    box-sizing: 'border-box';
+    border: '1px solid #ccc';
+    border-radius: '8px';
+    padding: '16px';
+    text-align: 'center';
+    background-color: '#f9f9f9';
+}
+
+.card img {
+    width: 80px; /* Define un ancho fijo para la imagen */
+    height: 80px; /* Define una altura fija para la imagen */
+    object-fit: cover; /* Asegura que la imagen mantenga su proporción dentro del contenedor */
+    border-radius: 8px; /* Aplica bordes redondeados */
+    display: block; /* Centra la imagen dentro del contenedor */
+    margin: 0 auto; /* Centra horizontalmente */
+}
+.card h3 {
+    margin: '16px 0';
+    font-size: '1.5em';
+}
+.card p {
+    font-size: '1em';
+    color: '#666';
+}

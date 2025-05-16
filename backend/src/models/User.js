@@ -30,13 +30,13 @@ const User = sequelize.define('User', {
         msg: 'La contraseña debe tener al menos 6 caracteres'
       }
     },
-    set(value) {
+    /*set(value) {
       if (value) {
         const salt = bcrypt.genSaltSync(10);
         const hash = bcrypt.hashSync(value, salt);
         this.setDataValue('password', hash);
       }
-    }
+    }*/
   },
   isAdmin: {
     type: DataTypes.BOOLEAN,

@@ -13,12 +13,18 @@ const Reservation = require('./models/Reservation');
 const app = express();
 
 // Configuración de middleware
+
+
+app.use(express.json());
+
+app.use(express.urlencoded({ extended: true }));
+
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 }));
-app.use(express.json());
+
 
 // Verificar clave secreta JWT al iniciar
 if (!process.env.JWT_SECRET) {
@@ -61,6 +67,8 @@ const adminAuth = [authenticate, (req, res, next) => {
 const hashPassword = async (password) => {
   return await bcrypt.hash(password, 10);
 };
+
+
 
 // RUTAS DE AUTENTICACIÓN
 /**
@@ -152,15 +160,30 @@ app.post('/login', async (req, res) => {
 
 // RUTAS DE USUARIO
 app.post('/register', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!validator.isEmail(email)) {
-      return res.status(400).json({ error: 'Email inválido' });
+    try {
+    // Verificación adicional de los datos recibidos
+    //console.log('Datos recibidos:', req.body); // Para diagnóstico
+    
+    if (!req.body || typeof req.body !== 'object') {
+      return res.status(400).json({ error: 'Datos de solicitud inválidos' });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+    const { email, password } = req.body;
+    
+    // Validación robusta
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'Email debe ser una cadena de texto válida' });
+    }
+    
+    const emailStr = String(email).trim();
+    if (!validator.isEmail(emailStr)) {
+      return res.status(400).json({ error: 'Formato de email inválido' });
+    }
+    
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ 
+        error: 'La contraseña debe ser una cadena con al menos 6 caracteres' 
+      });
     }
 
     const existingUser = await User.findOne({ where: { email } });
@@ -168,7 +191,7 @@ app.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'El email ya está registrado' });
     }
 
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await bcrypt.hash(password, 10); 
     const user = await User.create({
       email,
       password: hashedPassword,
@@ -183,7 +206,15 @@ app.post('/register', async (req, res) => {
 
   } catch (error) {
     console.error('Error en registro:', error);
-    res.status(500).json({ error: 'Error al registrar usuario' });
+    
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ error: 'El email ya está registrado' });
+    }
+    
+    res.status(500).json({ 
+      error: 'Error al registrar usuario',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
@@ -212,12 +243,14 @@ app.post('/spaces', adminAuth, async (req, res) => {
 // Ruta para obtener espacios
 app.get('/spaces', async (req, res) => {
   try {
-      const spaces = await Space.findAll();
-      res.json(spaces);
-    } catch (error) {
-      res.status(500).json({ error: 'Error al obtener espacios' });
-    }
-  });
+    const spaces = await Space.findAll({
+      order: [['name', 'ASC']]  // 👉 Esto ordena alfabéticamente por nombre
+    });
+    res.json(spaces);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener espacios' });
+  }
+});
   
   app.post('/spaces', async (req, res) => {
   try {
@@ -240,6 +273,41 @@ app.get('/spaces', async (req, res) => {
       }
     });
   
+/**
+ * @desc    Eliminar un espacio (solo si no tiene reservas asociadas)
+ * @route   DELETE /spaces/:id
+ * @access  Privado (admin)
+ */
+app.delete('/spaces/:id', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. Verificar si hay reservas asociadas al espacio
+    const existingReservations = await Reservation.findOne({
+      where: { space_id: id }
+    });
+
+    if (existingReservations) {
+      return res.status(400).json({
+        error: 'No se puede eliminar: el espacio tiene reservas asociadas.'
+      });
+    }
+
+    // 2. Intentar eliminar el espacio
+    const deletedCount = await Space.destroy({ where: { id } });
+
+    if (deletedCount === 0) {
+      return res.status(404).json({ error: 'Espacio no encontrado' });
+    }
+
+    res.json({ message: 'Espacio eliminado correctamente' });
+  } catch (error) {
+    console.error('❌ Error al eliminar espacio:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+
     // 2. Rutas para Reservations (Reservas)
   app.post('/reservations', async (req, res) => {
       try {
@@ -252,13 +320,28 @@ app.get('/spaces', async (req, res) => {
         }
     
         // Crear la reserva
-        const reservation = await Reservation.create({
+        /*const reservation = await Reservation.create({
           space_id,
           user_email,
           start_time,
           end_time,
           status: 'confirmed'
-        });
+        });*/
+       const user = await User.findOne({ where: { email: user_email } });
+          if (!user) {
+          return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      const reservation = await Reservation.create({
+        space_id: id,
+        user_id: user.id, // 👈 clave final
+        user_email,
+        start_time,
+        end_time,
+        total_cost,
+        status: 'confirmed'
+    });
+
     
         res.status(201).json(reservation);
       } catch (error) {
@@ -283,58 +366,62 @@ app.get('/spaces', async (req, res) => {
    * @body    { user_email, start_time, end_time }
    */
   app.post('/spaces/:id/reserve', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { user_email, start_time, end_time } = req.body;
-  
-      // 1. Validar que el espacio exista
-      const space = await Space.findByPk(id);
-      if (!space) {
-        return res.status(404).json({ error: 'Espacio no encontrado' });
-      }
-  
-      // 2. Validar disponibilidad (no reservas solapadas)
-      const conflictingReservation = await Reservation.findOne({
-        where: {
-          space_id: id,
-          [Op.or]: [
-            { start_time: { [Op.between]: [start_time, end_time] }},
-            { end_time: { [Op.between]: [start_time, end_time] }}
-          ]
-        }
-      });
-  
-      if (conflictingReservation) {
-        return res.status(409).json({ error: 'El espacio ya está reservado en ese horario' });
-      }
-  
-      // 3. Calcular costo basado en hourly_rate
-      const hours = (new Date(end_time) - new Date(start_time)) / (1000 * 60 * 60);
-      const total_cost = (hours * space.hourly_rate).toFixed(2);
-  
-      // 4. Crear reserva
-      const reservation = await Reservation.create({
-        space_id: id,
-        user_email,
-        start_time,
-        end_time,
-        total_cost,
-        status: 'confirmed'
-      });
-  
-      res.status(201).json({
-        message: 'Reserva confirmada',
-        reservation,
-        total_cost: `$${total_cost}`
-      });
-  
-    } catch (error) {
-      res.status(500).json({ 
-        error: 'Error al crear reserva',
-        details: error.message 
-      });
+  try {
+    const { id } = req.params;
+    const { user_email, start_time, end_time } = req.body;
+
+    const space = await Space.findByPk(id);
+    if (!space) {
+      return res.status(404).json({ error: 'Espacio no encontrado' });
     }
-  });
+
+    const user = await User.findOne({ where: { email: user_email } });
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const conflictingReservation = await Reservation.findOne({
+      where: {
+        space_id: id,
+        [Op.or]: [
+          { start_time: { [Op.between]: [start_time, end_time] } },
+          { end_time: { [Op.between]: [start_time, end_time] } }
+        ]
+      }
+    });
+
+    if (conflictingReservation) {
+      return res.status(409).json({ error: 'El espacio ya está reservado en ese horario' });
+    }
+
+    const hours = (new Date(end_time) - new Date(start_time)) / (1000 * 60 * 60);
+    const total_cost = (hours * space.hourly_rate).toFixed(2);
+
+    const reservation = await Reservation.create({
+      space_id: id,
+      user_id: user.id, // ✅ aquí va el ID correcto
+      user_email,
+      start_time,
+      end_time,
+      total_cost,
+      status: 'confirmed'
+    });
+
+    res.status(201).json({
+      message: 'Reserva confirmada',
+      reservation,
+      total_cost: `$${total_cost}`
+    });
+
+  } catch (error) {
+    console.error('Error al crear reserva:', error);
+    res.status(500).json({
+      error: 'Error al crear reserva',
+      details: error.message
+    });
+  }
+});
+
   
   /**
    * @desc    Actualizar tarifa por hora de un espacio
@@ -377,7 +464,27 @@ app.get('/spaces', async (req, res) => {
     }
   });
   
-  
+  app.put('/spaces/:id', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const [updated] = await Space.update(updates, { where: { id } });
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Espacio no encontrado' });
+    }
+
+    const updatedSpace = await Space.findByPk(id);
+    res.json({
+      message: 'Espacio actualizado',
+      space: updatedSpace
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al actualizar espacio', details: error.message });
+  }
+});
+
   
   app.get('/test-user', async (req, res) => {
     try {

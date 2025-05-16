@@ -11,7 +11,7 @@ import { useAuth } from '../context/useAuth';
 import AvailabilityPage from '../pages/AvailabilityPage';
 import MyBookings from '../components/MyBookings';
 import Profile from "../pages/Profile";
-import AdminSpace from '../components/admin/AdminSpace';
+import AdminSpaces from '../components/admin/AdminSpaces/AdminSpaces';
 import AdminStats from '../components/admin/AdminStats';
 
 export default function Dashboard() {
@@ -21,7 +21,6 @@ export default function Dashboard() {
   const urlTab = parseInt(searchParams.get('tab')) || 0;
   const [selectedTab, setSelectedTab] = useState(urlTab);
 
-  // Mantiene sincronización bidireccional entre estado y URL
   useEffect(() => {
     const currentURLTab = parseInt(searchParams.get('tab')) || 0;
     if (currentURLTab !== selectedTab) {
@@ -34,6 +33,21 @@ export default function Dashboard() {
     setSearchParams({ tab: index });
   };
 
+  // ⚠️ Pestañas base
+  const tabs = [
+    { label: 'Disponibilidad', component: <AvailabilityPage /> },
+    { label: 'Mis Reservas', component: <MyBookings /> },
+    { label: 'Perfil', component: <Profile /> },
+  ];
+
+  // 🧠 Agregar pestañas admin si aplica
+  if (user?.isAdmin) {
+    tabs.push(
+      { label: 'Gestión Espacios', component: <AdminSpaces /> },
+      { label: 'Estadísticas', component: <AdminStats /> }
+    );
+  }
+
   return (
     <Tabs
       index={selectedTab}
@@ -41,28 +55,18 @@ export default function Dashboard() {
       variant="enclosed"
     >
       <TabList>
-        <Tab>Disponibilidad</Tab>
-        <Tab>Mis Reservas</Tab>
-        <Tab>Perfil</Tab>
-        {user?.isAdmin && (
-          <>
-            <Tab>Gestión Espacios</Tab>
-            <Tab>Estadísticas</Tab>
-          </>
-        )}
+        {tabs.map((tab, index) => (
+          <Tab key={index}>{tab.label}</Tab>
+        ))}
       </TabList>
 
       <TabPanels>
-        <TabPanel><AvailabilityPage /></TabPanel>
-        <TabPanel><MyBookings /></TabPanel>
-        <TabPanel><Profile /></TabPanel>
-        {user?.isAdmin && (
-          <>
-            <TabPanel><AdminSpace /></TabPanel>
-            <TabPanel><AdminStats /></TabPanel>
-          </>
-        )}
+        {tabs.map((tab, index) => (
+          <TabPanel key={index}>{tab.component}</TabPanel>
+        ))}
       </TabPanels>
     </Tabs>
   );
 }
+
+

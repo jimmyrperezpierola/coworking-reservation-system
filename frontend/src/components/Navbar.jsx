@@ -18,27 +18,27 @@ const Navbar = () => {
           <>
             {/* Opciones para todos los usuarios */}
             <Link
-              to="/disponibilidad"
+              to="/dashboard?tab=0"
               className={`${styles.link} ${
-                location.pathname === '/disponibilidad' ? styles.active : ''
+                location.pathname === '/dashboard?tab=0' ? styles.active : ''
               }`}
             >
               Disponibilidad
             </Link>
 
             <Link
-              to="/reservas"
+              to="/dashboard?tab=1"
               className={`${styles.link} ${
-                location.pathname === '/reservas' ? styles.active : ''
+                location.pathname === '/dashboard?tab=1' ? styles.active : ''
               }`}
             >
               Mis Reservas
             </Link>
 
             <Link
-              to="/perfil"
+              to="/dashboard?tab=2"
               className={`${styles.link} ${
-                location.pathname === '/perfil' ? styles.active : ''
+                location.pathname === '/dashboard?tab=2' ? styles.active : ''
               }`}
             >
               Mi Perfil
@@ -48,18 +48,18 @@ const Navbar = () => {
             {user?.isAdmin && (
               <>
                 <Link
-                  to="/admin/espacios"
+                  to="/dashboard?tab=3"
                   className={`${styles.link} ${styles.adminLink} ${
-                    location.pathname === '/admin/espacios' ? styles.active : ''
+                    location.pathname === '/dashboard?tab=3' ? styles.active : ''
                   }`}
                 >
                   Espacios
                 </Link>
 
                 <Link
-                  to="/admin/estadisticas"
+                  to="/dashboard?tab=4"
                   className={`${styles.link} ${styles.adminLink} ${
-                    location.pathname === '/admin/estadisticas' ? styles.active : ''
+                    location.pathname === '/dashboard?tab=4' ? styles.active : ''
                   }`}
                 >
                   Estadísticas
@@ -72,9 +72,15 @@ const Navbar = () => {
             </button>
           </>
         ) : (
-          <Link to="/login" className={styles.loginButton}>
-            Iniciar Sesión
-          </Link>
+          <>
+            <Link to="/register" className={styles.loginButton}>
+              Registrarme
+            </Link>
+            <Link to="/login" className={styles.loginButton}>
+              Iniciar Sesión
+            </Link>
+
+         </> 
         )}
       </div>
     </nav>

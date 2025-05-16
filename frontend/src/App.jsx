@@ -7,7 +7,9 @@ import Navbar from './components/Navbar';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
-import AdminSpace from './components/admin/AdminSpace';
+import RegisterPage from  './pages/RegisterPage';
+//import AdminSpace from './components/admin/AdminSpace';
+import AdminSpace from './components/admin/AdminSpaces/AdminSpaces';
 import AdminStats from './components/admin/AdminStats';
 import AvailabilityPanel from './components/Availability/AvailabilityPanel';
 import AvailabilityPage from './pages/AvailabilityPage';
@@ -27,6 +29,7 @@ function App() {
             <Box as="main" flex={1} py={4} px={{ base: 4, md: 8 }}>
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/register" element={<RegisterPage />} />
                 <Route path="/login" element={<Login />} />
 
                 {/* 🔐 RUTAS PROTEGIDAS CON SIDEBAR */}

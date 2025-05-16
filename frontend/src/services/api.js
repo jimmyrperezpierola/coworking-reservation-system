@@ -41,4 +41,55 @@ export const setupAxiosInterceptors = () => {
 
 setupAxiosInterceptors(); // Ejecutar al cargar la app
 
+
+// Añade esto en tu archivo api.js (justo después de la función login)
+
+/**
+ * Registra un nuevo usuario (no administrador)
+ * @param {string} email - Email del usuario
+ * @param {string} password - Contraseña (mínimo 6 caracteres)
+ * @returns {Object} - Datos del usuario registrado { id, email, createdAt }
+ * @throws {Error} - Si hay error en el registro
+ */
+export const register = async (email, password) => {
+  try {
+    // Validación en el frontend antes de enviar
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      throw new Error('Los datos deben ser texto');
+    }
+
+    const response = await axios.post(`${API_URL}/register`, {
+      email: String(email).trim(), // Asegura que sea string y limpia espacios
+      password: String(password)   // Asegura que sea string
+    }, {
+      headers: {
+        'Content-Type': 'application/json', // Especifica explícitamente el tipo
+        'Accept': 'application/json'       // Asegura que esperas JSON en respuesta
+      },
+      transformRequest: [
+        (data) => JSON.stringify(data), // Fuerza la serialización como JSON
+      ]
+    });
+    
+    return response.data;
+  } catch (error) {
+    // Manejo mejorado de errores
+    if (error.response) {
+      // El servidor respondió con un código de error
+      const backendError = error.response.data?.error || 
+                         error.response.data?.message || 
+                         'Error en el servidor';
+      throw new Error(backendError);
+    } else if (error.request) {
+      // La solicitud fue hecha pero no hubo respuesta
+      throw new Error('El servidor no respondió');
+    } else {
+      // Error al configurar la solicitud
+      throw new Error('Error al configurar la solicitud');
+    }
+  }
+};
 // Añade más funciones API según necesites
+
+const api = axios; // Usamos axios ya configurado
+export default api;

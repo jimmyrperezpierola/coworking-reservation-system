@@ -6,12 +6,5 @@ backend/console.log('✅
 /backend/node_modules
 backend/package.json
 backend/package-lock.json
-frontend/.env
-frontend/console.error('Error
-frontend/console.error('❌
-frontend/console.log('Total
-frontend/console.log('✅
-/frontend/node_modules
-frontend/package.json
-frontend/package-lock.json
+
 

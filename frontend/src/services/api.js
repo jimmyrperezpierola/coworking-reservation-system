@@ -6,9 +6,11 @@ const API_URL = 'http://localhost:5000'; // Ajusta según tu backend
 // 2. Guardar token en localStorage y axios
 const saveToken = (token) => {
   localStorage.setItem('authToken', token);
-  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-};
 
+  if (token && token.length > 10) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+};
 // 3. Limpiar token al cerrar sesión
 export const clearToken = () => {
   localStorage.removeItem('authToken');
@@ -34,7 +36,8 @@ export const isAuthenticated = () => {
 // 6. Configurar axios al iniciar la app
 export const setupAxiosInterceptors = () => {
   const token = localStorage.getItem('authToken');
-  if (token) {
+  
+  if (token && typeof token === 'string' && token.length > 10) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 };

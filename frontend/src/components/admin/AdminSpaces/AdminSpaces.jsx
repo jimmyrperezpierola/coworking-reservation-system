@@ -15,6 +15,7 @@ import {
   AlertDialogOverlay,
 } from '@chakra-ui/react';
 import { useRef } from 'react';
+import { useGlobalRefresh } from "../../../context/useGlobalRefresh";
 
 import SpaceForm from './SpaceForm';
 
@@ -27,7 +28,7 @@ const AdminSpaces = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [spaceToDelete, setSpaceToDelete] = useState(null);
   const cancelRef = useRef();
-
+ const { refreshToken } = useGlobalRefresh();
 
 const getAuthHeader = () => ({
   headers: {
@@ -54,7 +55,7 @@ const getAuthHeader = () => ({
 
   useEffect(() => {
     fetchSpaces();
-  }, [fetchSpaces]);
+  }, [fetchSpaces, refreshToken]);
 
   const handleToggleStatus = async (space) => {
     try {

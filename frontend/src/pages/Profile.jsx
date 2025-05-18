@@ -81,21 +81,29 @@ export default function Profile() {
             <Tbody>
               {reservations.map(reservation => (
                 <Tr key={reservation.id}>
-                  <Td>{reservation.space?.name || 'Espacio eliminado'}</Td>
+                  <Td>{reservation.Space?.name || 'Espacio eliminado'}</Td>
                   <Td>{new Date(reservation.start_time).toLocaleDateString()}</Td>
                   <Td>
                     {new Date(reservation.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
                     {new Date(reservation.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </Td>
                   <Td>
-                    <Badge 
-                      colorScheme={
-                        reservation.status === 'confirmed' ? 'green' : 
-                        reservation.status === 'cancelled' ? 'red' : 'orange'
-                      }
-                    >
-                      {reservation.status}
-                    </Badge>
+                  <Badge
+                    colorScheme={
+                      reservation.status === 'confirmed'
+                        ? 'green'
+                        : reservation.status === 'cancelled'
+                        ? 'red'
+                        : 'orange'
+                    }
+                  >
+                    {reservation.status === 'confirmed'
+                      ? 'Confirmada'
+                      : reservation.status === 'cancelled'
+                      ? 'Cancelada'
+                      : 'Pendiente'}
+                  </Badge>
+
                   </Td>
                   <Td>${reservation.total_cost}</Td>
                 </Tr>

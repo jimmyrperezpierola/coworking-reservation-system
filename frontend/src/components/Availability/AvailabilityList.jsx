@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/useAuth';
 import ReservationModal from './ReservationModal'; // Nuevo componente a crear
 import styles from '../../styles/AvailabilityList.module.css';
+import { useGlobalRefresh } from '../../context/useGlobalRefresh';
 
 export default function AvailabilityList() {
   const { token, user } = useAuth();
@@ -13,27 +14,32 @@ export default function AvailabilityList() {
   const [selectedSpace, setSelectedSpace] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  
+  const { refreshToken, triggerGlobalRefresh } = useGlobalRefresh();
 
-  useEffect(() => {
-    const fetchSpaces = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/spaces', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setSpaces(res.data);
-      } catch (err) {
-        setError(err.response?.data?.message || 'Error al cargar espacios');
-        toast({
-          title: 'Error',
-          description: 'No se pudieron cargar los espacios',
-          status: 'error',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSpaces();
-  }, [token, toast]);
+const fetchSpaces = async () => {
+  try {
+    const res = await axios.get('http://localhost:5000/spaces/enabled', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setSpaces(res.data);
+  } catch (err) {
+    setError(err.response?.data?.message || 'Error al cargar espacios');
+    toast({
+      title: 'Error',
+      description: 'No se pudieron cargar los espacios',
+      status: 'error',
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  setLoading(true);
+  fetchSpaces();
+}, [token, toast, refreshToken,triggerGlobalRefresh]);
+
 
   const handleReserveClick = (space) => {
     console.log('Espacio seleccionado:', space.id); // 👈 verifica si tiene un .id

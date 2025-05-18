@@ -40,19 +40,28 @@ Reservation.belongsTo(Space, { foreignKey: 'space_id' });
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: 'Token requerido' });
+
+    // Verifica que exista y comience con "Bearer "
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token requerido o mal formado' });
+    }
 
     const token = authHeader.split(' ')[1];
+
+    // Verifica el JWT
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
+    // Busca el usuario
     const user = await User.findByPk(decoded.id);
-    if (!user) return res.status(401).json({ error: 'Usuario no encontrado' });
+    if (!user) {
+      return res.status(401).json({ error: 'Usuario no encontrado' });
+    }
 
     req.user = user;
     next();
   } catch (error) {
     console.error('Error de autenticación:', error.message);
-    res.status(403).json({ error: 'Token inválido o expirado' });
+    return res.status(403).json({ error: 'Token inválido o expirado' });
   }
 };
 
@@ -251,8 +260,21 @@ app.get('/spaces', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener espacios' });
   }
 });
-  
-  app.post('/spaces', async (req, res) => {
+
+app.get('/spaces/enabled', async (req, res) => {
+  try {
+    const spaces = await Space.findAll({
+      where: { enabled: true },
+      order: [['name', 'ASC']],
+    });
+    res.json(spaces);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener espacios vigentes' });
+  }
+});
+
+
+app.post('/spaces', async (req, res) => {
   try {
       const newSpace = await Space.create(req.body);
       res.status(201).json(newSpace);
@@ -349,16 +371,55 @@ app.delete('/spaces/:id', adminAuth, async (req, res) => {
       }
     });
     
-    app.get('/reservations', async (req, res) => {
-      try {
-        const reservations = await Reservation.findAll({
-          include: [{ model: Space }] // Incluye datos del espacio relacionado
-        });
-        res.json(reservations);
-      } catch (error) {
-        res.status(500).json({ error: 'Error al obtener reservas' });
-      }
+app.get('/reservations', async (req, res) => {
+  try {
+    const reservations = await Reservation.findAll({
+      include: [{ model: Space }]
     });
+ //   console.log(JSON.stringify(reservations, null, 2));
+    return res.json(reservations); // <-- IMPORTANTE: usa return
+  } catch (error) {
+    console.error('Error al obtener reservas:', error);
+    return res.status(500).json({ error: 'Error al obtener reservas' }); // <-- también return aquí
+  }
+});
+
+
+
+/**
+ * @desc    Cancelar una reserva existente
+ * @route   PUT /reservations/:id/cancel
+ * @access  Privado (usuario autenticado)
+ */
+app.put('/reservations/:id/cancel', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar la reserva por ID
+    const reservation = await Reservation.findByPk(id);
+
+    // Si no se encuentra la reserva
+    if (!reservation) {
+      return res.status(404).json({ error: 'Reserva no encontrada' });
+    }
+
+    // (Opcional) Verificar que la reserva pertenezca al usuario autenticado
+    // if (reservation.user_id !== req.user.id) {
+    //   return res.status(403).json({ error: 'No autorizado' });
+    // }
+
+    // Cambiar el estado a cancelado
+    reservation.status = 'cancelled';
+    await reservation.save();
+
+    // Devolver la reserva actualizada
+    res.json({ success: true, reservation });
+
+  } catch (err) {
+    console.error('Error al cancelar reserva:', err);
+    res.status(500).json({ error: 'Error al cancelar la reserva' });
+  }
+});
     
   /**
    * @desc    Reservar un espacio específico
@@ -658,34 +719,79 @@ app.delete('/users/me', authenticate, async (req, res) => {
  * @route   GET /users
  * @access  Privado (admin)
  */
-app.get('/users', adminAuth, async (req, res) => {
+app.get('/admin/stats', adminAuth, async (req, res) => {
+  //console.log('Autenticado correctamente');
   try {
-    // Opción 1: Paginación básica (ej: ?page=1&limit=10)
-    const { page = 1, limit = 10 } = req.query;
-    const offset = (page - 1) * limit;
+    // Ocupación de hoy
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
 
-    const users = await User.findAll({
-      attributes: { exclude: ['password'] }, // No mostrar contraseñas
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      order: [['createdAt', 'DESC']] // Ordenar por fecha de creación
+    const todayReservations = await Reservation.count({
+      where: {
+        start_time: {
+          [Op.between]: [todayStart.toISOString(), todayEnd.toISOString()],
+        },
+      },
     });
 
-    // Opción 2: Contar total de usuarios (para paginación en frontend)
-    const totalUsers = await User.count();
+    // Total de reservas
+    const totalReservations = await Reservation.count();
+
+    // Ingresos del mes
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const monthlyRevenueResult = await Reservation.findAll({
+      where: {
+        start_time: { [Op.gte]: monthStart.toISOString() },
+      },
+      attributes: ['total_cost'],
+    });
+
+    const monthlyRevenue = monthlyRevenueResult.reduce(
+      (acc, r) => acc + parseFloat(r.total_cost || 0),
+      0
+    );
+
+    // Ocupación semanal (últimos 5 días hábiles)
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const weeklyOccupancy = [];
+
+    for (let i = 0; i < 5; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const start = new Date(date.setHours(0, 0, 0, 0));
+      const end = new Date(date.setHours(23, 59, 59, 999));
+
+      const count = await Reservation.count({
+        where: {
+          start_time: {
+            [Op.between]: [start.toISOString(), end.toISOString()],
+          },
+        },
+      });
+
+      weeklyOccupancy.unshift({
+        day: days[start.getDay()],
+        value: count,
+      });
+    }
 
     res.json({
-      users,
-      total: totalUsers,
-      currentPage: parseInt(page),
-      totalPages: Math.ceil(totalUsers / limit)
+      todayOccupancy: todayReservations,
+      totalBookings: totalReservations,
+      monthlyRevenue,
+      weeklyOccupancy,
     });
-
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener usuarios' });
+    console.error('Error al obtener estadísticas:', error);
+    res.status(500).json({ error: 'Error al obtener estadísticas' });
   }
 });
- 
+
 
 // MANEJO DE ERRORES CENTRALIZADO
 app.use((err, req, res, next) => {

@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
-//import { useAuth } from '../context/useAuth';
-//import useAuth from '../context/useAuth'; // Importación por defecto
-import { useAuth } from '../context/useAuth'; // ✅ Correcto (exportación nombrada)
 import { 
   Heading, Box, Text, VStack, Button,
   Table, Thead, Tbody, Tr, Th, Td, 
   Badge, Spinner, Alert, AlertIcon
 } from '@chakra-ui/react';
+import { useAuth } from '../context/useAuth';
+import { getUserReservations } from '../../src/services/api'; // Asegúrate de que el path sea correcto
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -18,12 +16,9 @@ export default function Profile() {
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/reservations', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        setReservations(response.data);
+        const token = localStorage.getItem('token'); // O usa desde contexto si prefieres
+        const data = await getUserReservations(token);
+        setReservations(data);
       } catch (err) {
         setError('Error al cargar reservas');
         console.error('Error:', err);
@@ -37,24 +32,17 @@ export default function Profile() {
 
   return (
     <Box p={8} maxW="800px" mx="auto">
-      {/* Sección de información del usuario */}
       <Heading mb={6}>Mi Perfil</Heading>
       <VStack align="start" spacing={4} mb={8}>
         <Text><strong>Email:</strong> {user?.email}</Text>
         <Text><strong>Rol:</strong> {user?.isAdmin ? 'Administrador' : 'Usuario'}</Text>
-        
-        <Button 
-          colorScheme="red" 
-          mt={4}
-          onClick={logout}
-        >
+        <Button colorScheme="red" mt={4} onClick={logout}>
           Cerrar sesión
         </Button>
       </VStack>
 
-      {/* Sección de reservas */}
       <Heading size="md" mb={4}>Mis Reservas</Heading>
-      
+
       {error && (
         <Alert status="error" mb={4}>
           <AlertIcon />
@@ -79,22 +67,29 @@ export default function Profile() {
               </Tr>
             </Thead>
             <Tbody>
-              {reservations.map(reservation => (
+              {reservations.map((reservation) => (
                 <Tr key={reservation.id}>
-                  <Td>{reservation.space?.name || 'Espacio eliminado'}</Td>
+                  <Td>{reservation.Space?.name || 'Espacio eliminado'}</Td>
                   <Td>{new Date(reservation.start_time).toLocaleDateString()}</Td>
                   <Td>
                     {new Date(reservation.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
                     {new Date(reservation.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </Td>
                   <Td>
-                    <Badge 
+                    <Badge
                       colorScheme={
-                        reservation.status === 'confirmed' ? 'green' : 
-                        reservation.status === 'cancelled' ? 'red' : 'orange'
+                        reservation.status === 'confirmed'
+                          ? 'green'
+                          : reservation.status === 'cancelled'
+                          ? 'red'
+                          : 'orange'
                       }
                     >
-                      {reservation.status}
+                      {reservation.status === 'confirmed'
+                        ? 'Confirmada'
+                        : reservation.status === 'cancelled'
+                        ? 'Cancelada'
+                        : 'Pendiente'}
                     </Badge>
                   </Td>
                   <Td>${reservation.total_cost}</Td>

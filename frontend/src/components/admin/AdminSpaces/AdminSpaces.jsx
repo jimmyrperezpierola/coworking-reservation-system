@@ -1,22 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import {
   Table, Thead, Tbody, Tr, Th, Td,
   Box, Heading, Button, Switch, Tag, IconButton,
-  useDisclosure, useToast
+  useDisclosure, useToast, AlertDialog, AlertDialogOverlay,
+  AlertDialogContent, AlertDialogHeader, AlertDialogBody,
+  AlertDialogFooter
 } from '@chakra-ui/react';
 import { EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons';
-import axios from 'axios';
-import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
-} from '@chakra-ui/react';
-import { useRef } from 'react';
 
+import { useGlobalRefresh } from "../../../context/useGlobalRefresh";
 import SpaceForm from './SpaceForm';
+import { getSpaces, updateSpaceStatus, deleteSpace } from '../../../services/api'; // ajusta el path si es necesario
 
 const AdminSpaces = () => {
   const [spaces, setSpaces] = useState([]);
@@ -27,18 +21,12 @@ const AdminSpaces = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [spaceToDelete, setSpaceToDelete] = useState(null);
   const cancelRef = useRef();
-
-
-const getAuthHeader = () => ({
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem('authToken')}`
-  }
-});
+  const { refreshToken } = useGlobalRefresh();
 
   const fetchSpaces = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:5000/spaces', getAuthHeader());
-      setSpaces(response.data);
+      const data = await getSpaces();
+      setSpaces(data);
       setLoading(false);
     } catch (error) {
       toast({
@@ -54,16 +42,11 @@ const getAuthHeader = () => ({
 
   useEffect(() => {
     fetchSpaces();
-  }, [fetchSpaces]);
+  }, [fetchSpaces, refreshToken]);
 
   const handleToggleStatus = async (space) => {
     try {
-    await axios.put(
-      `http://localhost:5000/spaces/${space.id}`,
-      { ...space, enabled: !space.enabled },
-      getAuthHeader()
-    );
-
+      await updateSpaceStatus(space);
       fetchSpaces();
       toast({
         title: 'Éxito',
@@ -84,40 +67,39 @@ const getAuthHeader = () => ({
   };
 
   const confirmDelete = async () => {
-  if (!spaceToDelete) return;
+    if (!spaceToDelete) return;
 
-  try {
-    await axios.delete(`http://localhost:5000/spaces/${spaceToDelete.id}`, getAuthHeader());
-    fetchSpaces();
-    toast({
-      title: 'Éxito',
-      description: 'Espacio eliminado',
-      status: 'success',
-      duration: 2000,
-      isClosable: true,
-    });
-  } catch (error) {
-    toast({
-      title: 'Error',
-      description: error.response?.data?.error || 'No se puede eliminar',
-      status: 'error',
-      duration: 5000,
-      isClosable: true,
-    });
-  } finally {
-    setIsDeleteOpen(false);
-    setSpaceToDelete(null);
-  }
-};
-
+    try {
+      await deleteSpace(spaceToDelete.id);
+      fetchSpaces();
+      toast({
+        title: 'Éxito',
+        description: 'Espacio eliminado',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'No se puede eliminar',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsDeleteOpen(false);
+      setSpaceToDelete(null);
+    }
+  };
 
   return (
     <Box p={6}>
       <Heading as="h1" size="xl" mb={6}>
         Administración de Espacios
       </Heading>
-      
-      <Button 
+
+      <Button
         leftIcon={<AddIcon />}
         colorScheme="blue"
         mb={6}
@@ -128,7 +110,7 @@ const getAuthHeader = () => ({
       >
         Nuevo Espacio
       </Button>
-      
+
       <Box overflowX="auto">
         <Table variant="striped" colorScheme="gray">
           <Thead>
@@ -182,7 +164,6 @@ const getAuthHeader = () => ({
                     }}
                     aria-label="Eliminar espacio"
                   />
-
                 </Td>
               </Tr>
             ))}
@@ -190,45 +171,42 @@ const getAuthHeader = () => ({
         </Table>
       </Box>
 
-      <SpaceForm 
+      <SpaceForm
         isOpen={isOpen}
         onClose={onClose}
         space={selectedSpace}
         onSuccess={fetchSpaces}
       />
+
       <AlertDialog
-      isOpen={isDeleteOpen}
-      leastDestructiveRef={cancelRef}
-      onClose={() => setIsDeleteOpen(false)}
-      motionPreset="scale"
+        isOpen={isDeleteOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={() => setIsDeleteOpen(false)}
+        motionPreset="scale"
       >
-      <AlertDialogOverlay>
-        
-        <AlertDialogContent>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            Confirmar Eliminación
-          </AlertDialogHeader>
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              Confirmar Eliminación
+            </AlertDialogHeader>
 
-          <AlertDialogBody>
-            ¿Estás seguro que deseas eliminar este espacio? Esta acción no se puede deshacer.
-          </AlertDialogBody>
+            <AlertDialogBody>
+              ¿Estás seguro que deseas eliminar este espacio? Esta acción no se puede deshacer.
+            </AlertDialogBody>
 
-          <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={() => setIsDeleteOpen(false)}>
-              Cancelar
-            </Button>
-            <Button colorScheme="red" onClick={confirmDelete} ml={3}>
-              Eliminar
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialogOverlay>
-    </AlertDialog>
-
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={() => setIsDeleteOpen(false)}>
+                Cancelar
+              </Button>
+              <Button colorScheme="red" onClick={confirmDelete} ml={3}>
+                Eliminar
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Box>
-    
   );
-  
 };
 
 export default AdminSpaces;

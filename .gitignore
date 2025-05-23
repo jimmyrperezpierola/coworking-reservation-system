@@ -7,4 +7,6 @@ backend/console.log('✅
 backend/package.json
 backend/package-lock.json
 
-
+frontend/node_modules
+frontend/package-lock.json
+frontend/{

@@ -19,14 +19,17 @@ export default function Login() {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      const response = await login(email, password);
+  e.preventDefault();
+  setIsLoading(true);
+
+  try {
+    const response = await login(email, password);
+
+    // 👉 Espera 50ms para asegurar que axios tenga el header
+    setTimeout(() => {
       authLogin({
         user: response.user,
-        token: response.token
+        token: response.token,
       });
 
       toast({
@@ -37,21 +40,20 @@ export default function Login() {
         isClosable: true,
       });
 
-      // ✅ Redirige al dashboard después del login
       navigate('/dashboard', { replace: true });
-
-    } catch (error) {
-      toast({
-        title: "Error al iniciar sesión",
-        description: error.response?.data?.message || 'Credenciales incorrectas',
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    }, 50); // Delay mínimo, pero efectivo
+  } catch (error) {
+    toast({
+      title: "Error al iniciar sesión",
+      description: error.response?.data?.message || 'Credenciales incorrectas',
+      status: "error",
+      duration: 5000,
+      isClosable: true,
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <Box maxW="md" mx="auto" mt={10} p={6} borderWidth="1px" borderRadius="lg">

@@ -1,12 +1,17 @@
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
+
 import { Link, useLocation } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import styles from '../styles/Navbar.module.css';
+import { useGlobalRefresh } from '../context/useGlobalRefresh'; 
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useContext(AuthContext);
+  const { refreshToken, triggerGlobalRefresh } = useGlobalRefresh();
   const location = useLocation();
-
+  useEffect(() => {
+    // ✅ Esto fuerza el re-render cuando el refresh global cambia
+  }, [refreshToken,triggerGlobalRefresh]);
   return (
     <nav className={styles.navContainer}>
       <Link to="/" className={styles.logo}>

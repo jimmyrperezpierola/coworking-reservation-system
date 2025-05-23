@@ -6,9 +6,11 @@ const API_URL = 'http://localhost:5000'; // Ajusta según tu backend
 // 2. Guardar token en localStorage y axios
 const saveToken = (token) => {
   localStorage.setItem('authToken', token);
-  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-};
 
+  if (token && token.length > 10) {
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+};
 // 3. Limpiar token al cerrar sesión
 export const clearToken = () => {
   localStorage.removeItem('authToken');
@@ -34,10 +36,18 @@ export const isAuthenticated = () => {
 // 6. Configurar axios al iniciar la app
 export const setupAxiosInterceptors = () => {
   const token = localStorage.getItem('authToken');
-  if (token) {
+  
+  if (token && typeof token === 'string' && token.length > 10) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 };
+
+// Utilidad para obtener el header con token
+const getAuthHeader = () => ({
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+  },
+});
 
 setupAxiosInterceptors(); // Ejecutar al cargar la app
 
@@ -90,6 +100,106 @@ export const register = async (email, password) => {
   }
 };
 // Añade más funciones API según necesites
+
+
+// src/api.js
+
+
+export const getEnabledSpaces = async (token) => {
+  try {
+    const res = await axios.get(`${API_URL}/spaces/enabled`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching enabled spaces:', error);
+    throw error; // Deja que el componente lo maneje si quiere
+  }
+};
+export const reserveSpace = async (spaceId, reservationData, token) => {
+  try {
+  const response = await axios.post(
+    `${API_URL}/spaces/${spaceId}/reserve`,
+    reservationData,
+    getAuthHeader(token)
+  );
+  return response.data;
+  } catch (error) {
+    console.error('Error reserving space:', error);
+  throw error; // Deja que el componente lo maneje si quiere
+  } 
+};
+export const getUserReservations = async (token) => {
+  try {
+    const res = await axios.get(`${API_URL}/reservations`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching user reservations:', error);
+    throw error; // Deja que el componente lo maneje si quiere
+  }
+};
+
+export const cancelReservation = async (id, token) => {
+  try {
+    const res = await axios.delete(`${API_URL}/reservations/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error canceling reservation:', error);
+    throw error; // Deja que el componente lo maneje si quiere
+  }
+};
+
+export const getAdminStats = async () => {
+  try {
+    const token = localStorage.getItem('authToken');
+    const res = await axios.get(`${API_URL}/admin/stats`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  }
+  catch (error) {
+    console.error('Error fetching admin stats:', error);
+    throw error; // Deja que el componente lo maneje si quiere
+  }
+};
+
+export const getSpaces = async () => {
+  try {
+    const res = await axios.get(`${API_URL}/spaces`, getAuthHeader());
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching spaces:', error);
+    throw error; // Deja que el componente lo maneje si quiere
+  }
+  };
+export const updateSpaceStatus = async (space) => {
+  try {
+    const res = await axios.put(
+      `${API_URL}/spaces${space.id}`,
+      { ...space, enabled: !space.enabled },
+      getAuthHeader()
+    );
+    return res.data;
+  } catch (error) {
+    console.error('Error updating space status:', error);
+    throw error; // Deja que el componente lo maneje si quiere
+  }
+};
+
+export const deleteSpace = async (spaceId) => {
+  try {
+    const res = await axios.delete(`${API_URL}/spaces/${spaceId}`, getAuthHeader());
+    return res.data;
+  } catch (error) {
+    console.error('Error deleting space:', error);
+    throw error; // Deja que el componente lo maneje si quiere
+  }
+};
+
 
 const api = axios; // Usamos axios ya configurado
 export default api;

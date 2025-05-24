@@ -21,11 +21,11 @@ export default function AuthProvider({ children }) {
           setAuthState({
             user: parsedUser,
             token,
-            loading: false
+            loading: false,
           });
         } catch (e) {
-          console.error('Error parsing user from localStorage', e);
-          setAuthState({ user: null, token: null, loading: false });
+          console.error('❌ Error parsing user from localStorage:', e);
+          logout(); // limpia si hay error
         }
       } else {
         setAuthState({ user: null, token: null, loading: false });
@@ -35,29 +35,25 @@ export default function AuthProvider({ children }) {
     initAuth();
   }, []);
 
-  const login = (authData) => {
-    localStorage.setItem('authToken', authData.token);
-    localStorage.setItem('authUser', JSON.stringify(authData.user));
-    axios.defaults.headers.common['Authorization'] = `Bearer ${authData.token}`;
-    setAuthState({
-      user: authData.user,
-      token: authData.token,
-      loading: false
-    });
+  const login = ({ token, user }) => {
+    try {
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('authUser', JSON.stringify(user));
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setAuthState({ user, token, loading: false });
+    } catch (err) {
+      console.error('❌ Error en login:', err);
+    }
   };
 
   const logout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
     delete axios.defaults.headers.common['Authorization'];
-    setAuthState({
-      user: null,
-      token: null,
-      loading: false
-    });
+    setAuthState({ user: null, token: null, loading: false });
   };
 
-  if (authState.loading) return null; // O un loader si prefieres
+  if (authState.loading) return null; // Puedes poner un <Spinner />
 
   return (
     <AuthContext.Provider

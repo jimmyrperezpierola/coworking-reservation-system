@@ -1,54 +1,77 @@
-import { Box, Text, SimpleGrid, Stat, StatLabel, StatNumber } from '@chakra-ui/react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useEffect, useState } from 'react';
+import {
+  Box,
+  Text,
+  SimpleGrid,
+  Stat,
+  StatLabel,
+  StatNumber,
+  Spinner,
+} from '@chakra-ui/react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import { getAdminStats } from '../../services/api'; // Ajusta el path si es necesario
 
-// Datos de ejemplo para las gráficas (reemplaza con datos reales de tu API)
-const sampleData = [
-  { name: 'Lun', ocupación: 70 },
-  { name: 'Mar', ocupación: 45 },
-  { name: 'Mié', ocupación: 80 },
-  { name: 'Jue', ocupación: 65 },
-  { name: 'Vie', ocupación: 90 },
-];
-
-/**
- * Panel de estadísticas para administradores
- * Muestra métricas clave y gráficos de ocupación
- */
 export default function AdminStats() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await getAdminStats();
+        setStats(data);
+      } catch (err) {
+        console.error('Error al cargar estadísticas:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return <Spinner size="xl" />;
+  }
+
   return (
     <Box p="4">
-      {/* Título */}
       <Text fontSize="2xl" fontWeight="bold" mb="6">
         Estadísticas de Ocupación
       </Text>
 
-      {/* Métricas rápidas */}
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing="4" mb="8">
         <Stat p="4" bg="white" borderRadius="lg" boxShadow="sm">
           <StatLabel>Ocupación Hoy</StatLabel>
-          <StatNumber>68%</StatNumber>
+          <StatNumber>{stats?.todayOccupancy ?? '-'}</StatNumber>
         </Stat>
         <Stat p="4" bg="white" borderRadius="lg" boxShadow="sm">
           <StatLabel>Reservas Totales</StatLabel>
-          <StatNumber>124</StatNumber>
+          <StatNumber>{stats?.totalBookings ?? '-'}</StatNumber>
         </Stat>
         <Stat p="4" bg="white" borderRadius="lg" boxShadow="sm">
           <StatLabel>Ingresos Mensuales</StatLabel>
-          <StatNumber>$5,280</StatNumber>
+          <StatNumber>${stats?.monthlyRevenue?.toFixed(2) ?? '0.00'}</StatNumber>
         </Stat>
       </SimpleGrid>
 
-      {/* Gráfico de ocupación semanal */}
       <Box bg="white" p="4" borderRadius="lg" boxShadow="sm" h="300px">
         <Text fontWeight="bold" mb="4">
           Ocupación Semanal
         </Text>
         <ResponsiveContainer width="100%" height="80%">
-          <BarChart data={sampleData}>
-            <XAxis dataKey="name" />
+          <BarChart data={stats.weeklyOccupancy}>
+            <XAxis dataKey="day" />
             <YAxis />
             <Tooltip />
-            <Bar dataKey="ocupación" fill="#3182CE" />
+            <Bar dataKey="value" fill="#3182CE" />
           </BarChart>
         </ResponsiveContainer>
       </Box>

@@ -1,26 +1,30 @@
 import { useEffect, useState } from 'react';
 import { SimpleGrid, Box, Button, Text, Spinner } from '@chakra-ui/react';
-import axios from 'axios';
 import { useAuth } from '../context/useAuth';
+import { useGlobalRefresh } from '../../context/useGlobalRefresh';
+import { getEnabledSpaces } from '../../api'; // Ajusta el path según tu estructura
 
 export default function AvailabilityList() {
   const { token } = useAuth();
   const [spaces, setSpaces] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { refreshToken, triggerGlobalRefresh } = useGlobalRefresh();
 
   useEffect(() => {
-    axios.get('http://localhost:5000/spaces', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => {
-        setSpaces(res.data);
-        setLoading(false);
-      })
-      .catch(err => {
+    const fetchSpaces = async () => {
+      setLoading(true);
+      try {
+        const data = await getEnabledSpaces(token);
+        setSpaces(data);
+      } catch (err) {
         console.error('Error fetching spaces:', err);
+      } finally {
         setLoading(false);
-      });
-  }, [token]);
+      }
+    };
+
+    fetchSpaces();
+  }, [token, refreshToken, triggerGlobalRefresh]);
 
   if (loading) return <Spinner size="xl" />;
 

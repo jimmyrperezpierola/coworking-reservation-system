@@ -3,7 +3,7 @@ import axios from 'axios';
 // 1. Configuración básica
 const API_URL = 'http://localhost:5000'; // Ajusta según tu backend
 
-// 2. Guardar token en localStorage y axios
+// 2. Guardar token
 const saveToken = (token) => {
   localStorage.setItem('authToken', token);
 
@@ -11,18 +11,19 @@ const saveToken = (token) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 };
-// 3. Limpiar token al cerrar sesión
+
+// 3. Limpiar token
 export const clearToken = () => {
   localStorage.removeItem('authToken');
   delete axios.defaults.headers.common['Authorization'];
 };
 
-// 4. Función de login (DEVUELVE TODA LA RESPUESTA DEL BACKEND)
+// 4. Función de login
 export const login = async (email, password) => {
   try {
     const response = await axios.post(`${API_URL}/login`, { email, password });
-    saveToken(response.data.token); // Guarda el token automáticamente
-    return response.data; // ✅ Devuelve { success, token, user, expiresIn }
+    saveToken(response.data.token);
+    return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.error || 'Error al iniciar sesión');
   }
@@ -33,173 +34,152 @@ export const isAuthenticated = () => {
   return !!localStorage.getItem('authToken');
 };
 
-// 6. Configurar axios al iniciar la app
+// 6. Configurar axios al iniciar
 export const setupAxiosInterceptors = () => {
   const token = localStorage.getItem('authToken');
-  
   if (token && typeof token === 'string' && token.length > 10) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 };
 
-// Utilidad para obtener el header con token
-const getAuthHeader = () => ({
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-  },
-});
+// 🔧 MEJORADO: Devuelve header vacío si no hay token válido
+const getAuthHeader = () => {
+  const token = localStorage.getItem('authToken');
+  return token && token.length > 10
+    ? { headers: { Authorization: `Bearer ${token}` } }
+    : {};
+};
 
-setupAxiosInterceptors(); // Ejecutar al cargar la app
+setupAxiosInterceptors(); // Ejecutar al cargar
 
-
-// Añade esto en tu archivo api.js (justo después de la función login)
-
-/**
- * Registra un nuevo usuario (no administrador)
- * @param {string} email - Email del usuario
- * @param {string} password - Contraseña (mínimo 6 caracteres)
- * @returns {Object} - Datos del usuario registrado { id, email, createdAt }
- * @throws {Error} - Si hay error en el registro
- */
+// 🔁 Función de registro
 export const register = async (email, password) => {
   try {
-    // Validación en el frontend antes de enviar
     if (typeof email !== 'string' || typeof password !== 'string') {
       throw new Error('Los datos deben ser texto');
     }
 
     const response = await axios.post(`${API_URL}/register`, {
-      email: String(email).trim(), // Asegura que sea string y limpia espacios
-      password: String(password)   // Asegura que sea string
+      email: String(email).trim(),
+      password: String(password)
     }, {
       headers: {
-        'Content-Type': 'application/json', // Especifica explícitamente el tipo
-        'Accept': 'application/json'       // Asegura que esperas JSON en respuesta
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
       },
-      transformRequest: [
-        (data) => JSON.stringify(data), // Fuerza la serialización como JSON
-      ]
+      transformRequest: [(data) => JSON.stringify(data)]
     });
-    
+
     return response.data;
   } catch (error) {
-    // Manejo mejorado de errores
     if (error.response) {
-      // El servidor respondió con un código de error
-      const backendError = error.response.data?.error || 
-                         error.response.data?.message || 
-                         'Error en el servidor';
+      const backendError = error.response.data?.error ||
+        error.response.data?.message ||
+        'Error en el servidor';
       throw new Error(backendError);
     } else if (error.request) {
-      // La solicitud fue hecha pero no hubo respuesta
       throw new Error('El servidor no respondió');
     } else {
-      // Error al configurar la solicitud
       throw new Error('Error al configurar la solicitud');
     }
   }
 };
-// Añade más funciones API según necesites
 
-
-// src/api.js
-
-
-export const getEnabledSpaces = async (token) => {
+// ✅ CAMBIO: Eliminado `token`, usando getAuthHeader()
+export const getEnabledSpaces = async () => {
   try {
-    const res = await axios.get(`${API_URL}/spaces/enabled`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await axios.get(`${API_URL}/spaces/enabled`, getAuthHeader());
     return res.data;
   } catch (error) {
     console.error('Error fetching enabled spaces:', error);
-    throw error; // Deja que el componente lo maneje si quiere
+    throw error;
   }
 };
-export const reserveSpace = async (spaceId, reservationData, token) => {
+
+// ✅ CAMBIO: Eliminado `token`, usando getAuthHeader()
+export const reserveSpace = async (spaceId, reservationData) => {
   try {
-  const response = await axios.post(
-    `${API_URL}/spaces/${spaceId}/reserve`,
-    reservationData,
-    getAuthHeader(token)
-  );
-  return response.data;
+    const response = await axios.post(
+      `${API_URL}/spaces/${spaceId}/reserve`,
+      reservationData,
+      getAuthHeader()
+    );
+    return response.data;
   } catch (error) {
     console.error('Error reserving space:', error);
-  throw error; // Deja que el componente lo maneje si quiere
-  } 
+    throw error;
+  }
 };
-export const getUserReservations = async (token) => {
+
+// ✅ CAMBIO: Eliminado `token`, usando getAuthHeader()
+export const getUserReservations = async () => {
   try {
-    const res = await axios.get(`${API_URL}/reservations`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await axios.get(`${API_URL}/reservations`, getAuthHeader());
     return res.data;
   } catch (error) {
     console.error('Error fetching user reservations:', error);
-    throw error; // Deja que el componente lo maneje si quiere
+    throw error;
   }
 };
 
-export const cancelReservation = async (id, token) => {
+// ✅ CAMBIO: Eliminado `token`, usando getAuthHeader()
+export const cancelReservation = async (id) => {
   try {
-    const res = await axios.delete(`${API_URL}/reservations/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await axios.delete(`${API_URL}/reservations/${id}`, getAuthHeader());
     return res.data;
   } catch (error) {
     console.error('Error canceling reservation:', error);
-    throw error; // Deja que el componente lo maneje si quiere
+    throw error;
   }
 };
 
+// ✅ CAMBIO: token ya se toma de localStorage
 export const getAdminStats = async () => {
   try {
-    const token = localStorage.getItem('authToken');
-    const res = await axios.get(`${API_URL}/admin/stats`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const res = await axios.get(`${API_URL}/admin/stats`, getAuthHeader());
     return res.data;
-  }
-  catch (error) {
+  } catch (error) {
     console.error('Error fetching admin stats:', error);
-    throw error; // Deja que el componente lo maneje si quiere
+    throw error;
   }
 };
 
+// ✅ CAMBIO: usando getAuthHeader()
 export const getSpaces = async () => {
   try {
     const res = await axios.get(`${API_URL}/spaces`, getAuthHeader());
     return res.data;
   } catch (error) {
     console.error('Error fetching spaces:', error);
-    throw error; // Deja que el componente lo maneje si quiere
+    throw error;
   }
-  };
+};
+
+// ✅ CAMBIO: usando getAuthHeader()
 export const updateSpaceStatus = async (space) => {
   try {
     const res = await axios.put(
-      `${API_URL}/spaces${space.id}`,
+      `${API_URL}/spaces/${space.id}`,
       { ...space, enabled: !space.enabled },
       getAuthHeader()
     );
     return res.data;
   } catch (error) {
     console.error('Error updating space status:', error);
-    throw error; // Deja que el componente lo maneje si quiere
+    throw error;
   }
 };
 
+// ✅ CAMBIO: usando getAuthHeader()
 export const deleteSpace = async (spaceId) => {
   try {
     const res = await axios.delete(`${API_URL}/spaces/${spaceId}`, getAuthHeader());
     return res.data;
   } catch (error) {
     console.error('Error deleting space:', error);
-    throw error; // Deja que el componente lo maneje si quiere
+    throw error;
   }
 };
 
-
-const api = axios; // Usamos axios ya configurado
+const api = axios;
 export default api;

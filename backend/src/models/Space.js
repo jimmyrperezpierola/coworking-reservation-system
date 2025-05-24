@@ -1,23 +1,20 @@
 // backend/src/models/Space.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../db'); // Importa la conexión
+const sequelize = require('../db'); // ✅ Esta es la instancia correcta
 
 const Space = sequelize.define('Space', {
-  // Campos originales (mantenidos exactamente igual)
-  name: { 
-    type: DataTypes.STRING, 
-    allowNull: false 
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
   },
-  capacity: { 
-    type: DataTypes.INTEGER, 
-    allowNull: false 
+  capacity: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
-  hourly_rate: { 
-    type: DataTypes.DECIMAL(10, 2), 
-    allowNull: false 
+  hourly_rate: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false
   },
-
-  // Nuevos campos solicitados
   enabled: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
@@ -32,7 +29,7 @@ const Space = sequelize.define('Space', {
       isIn: [['sala', 'escritorio']]
     },
     comment: 'Tipo de espacio: sala o escritorio'
-  },
+  }
 });
 
 module.exports = Space;

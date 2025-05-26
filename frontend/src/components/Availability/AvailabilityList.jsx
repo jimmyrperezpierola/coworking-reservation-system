@@ -68,10 +68,6 @@ const handleReservationSubmit = async (spaceId, reservationData) => {
       },
       { headers: { Authorization: `Bearer ${token}` } }
     );
-    toast({
-      title: '¡Reserva exitosa!',
-      status: 'success',
-    });
     onClose();
   } catch (err) {
     console.error('Error al reservar:', err.response?.data || err.message);

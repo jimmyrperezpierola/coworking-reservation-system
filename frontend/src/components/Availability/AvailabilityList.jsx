@@ -51,15 +51,35 @@ export default function AvailabilityList() {
     onOpen();
   };
 
-  const handleReservationSubmit = async (spaceId, reservationData) => {
-    if (!spaceId) {
-      toast({
-        title: 'Error interno',
-        description: 'ID del espacio no encontrado',
-        status: 'error',
-      });
-      return;
-    }
+const handleReservationSubmit = async (spaceId, reservationData) => {
+  if (!spaceId) {
+    toast({
+      title: 'Error interno',
+      description: 'ID del espacio no encontrado',
+      status: 'error',
+    });
+    return;
+  }
+
+  try {
+    await axios.post(
+      `http://localhost:5000/spaces/${spaceId}/reserve`,
+      {
+        user_email: user.email,
+        ...reservationData
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    onClose();
+  } catch (err) {
+    console.error('Error al reservar:', err.response?.data || err.message);
+    toast({
+      title: 'Error al reservar',
+      description: err.response?.data?.error || err.response?.data?.details || err.message,
+      status: 'error',
+    });
+  }
+};
 
     try {
       await reserveSpace(spaceId, { user_email: user.email, ...reservationData }, token);

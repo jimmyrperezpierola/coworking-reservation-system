@@ -18,6 +18,8 @@ import AvailabilityPage from './pages/AvailabilityPage';
 import MyBookings from './components/MyBookings';
 import theme from './theme';
 import NotFound from './pages/NotFound';
+import Confirmacion from './pages/ConfirmacionReserva';
+import Exito from './pages/Exito';
 
 import LayoutConSidebar from './layouts/LayoutConSidebar'; // 👈 importar layout
 
@@ -41,6 +43,8 @@ function App() {
                     <Route path="/reservas" element={<MyBookings />} />
                     <Route path="/perfil" element={<Profile />} />
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/confirmacion" element={<Confirmacion />} />
+                    <Route path="/exito" element={<Exito />} />
 
                     <Route element={<AdminRoute />}>
                       <Route path="/admin/espacios" element={<AdminSpace />} />

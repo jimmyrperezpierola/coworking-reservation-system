@@ -2,6 +2,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
+import { GlobalRefreshProvider } from './context/GlobalRefreshContext';
 import App from './App';
 import AuthProvider from './context/AuthProvider';
 
@@ -59,10 +60,12 @@ const root = createRoot(document.getElementById('root'));
 
 root.render(
   <StrictMode>
+    <GlobalRefreshProvider>
     <ChakraProvider theme={theme}>
       <AuthProvider>
         <App />
       </AuthProvider>
     </ChakraProvider>
+    </GlobalRefreshProvider>
   </StrictMode>
 );

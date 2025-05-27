@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { SimpleGrid, Box, Button, Text, Spinner, useDisclosure, useToast } from '@chakra-ui/react';
-import axios from 'axios';
 import { useAuth } from '../../context/useAuth';
-import ReservationModal from './ReservationModal'; // Nuevo componente a crear
+import { useGlobalRefresh } from '../../context/useGlobalRefresh';
+import ReservationModal from './ReservationModal';
 import styles from '../../styles/AvailabilityList.module.css';
+
+import { getEnabledSpaces, reserveSpace } from '../../services/api'; // Ajusta path si es necesario
 
 export default function AvailabilityList() {
   const { token, user } = useAuth();
@@ -13,30 +15,30 @@ export default function AvailabilityList() {
   const [selectedSpace, setSelectedSpace] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const { refreshToken, triggerGlobalRefresh } = useGlobalRefresh();
+
+  const fetchSpaces = async () => {
+    try {
+      const data = await getEnabledSpaces(token);
+      setSpaces(data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error al cargar espacios');
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar los espacios',
+        status: 'error',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchSpaces = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/spaces', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setSpaces(res.data);
-      } catch (err) {
-        setError(err.response?.data?.message || 'Error al cargar espacios');
-        toast({
-          title: 'Error',
-          description: 'No se pudieron cargar los espacios',
-          status: 'error',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
     fetchSpaces();
-  }, [token, toast]);
+  }, [token, toast, refreshToken, triggerGlobalRefresh]);
 
   const handleReserveClick = (space) => {
-    console.log('Espacio seleccionado:', space.id); // 👈 verifica si tiene un .id
     if (!user) {
       toast({
         title: 'Inicia sesión',
@@ -79,6 +81,22 @@ const handleReservationSubmit = async (spaceId, reservationData) => {
   }
 };
 
+    try {
+      await reserveSpace(spaceId, { user_email: user.email, ...reservationData }, token);
+      toast({
+        title: '¡Reserva exitosa!',
+        status: 'success',
+      });
+      onClose();
+    } catch (err) {
+      console.error('Error al reservar:', err.response?.data || err.message);
+      toast({
+        title: 'Error al reservar',
+        description: err.response?.data?.error || err.response?.data?.details || err.message,
+        status: 'error',
+      });
+    }
+  };
 
   if (loading) return <Spinner size="xl" thickness="4px" />;
   if (error) return <Text color="red.500">{error}</Text>;
@@ -109,7 +127,6 @@ const handleReservationSubmit = async (spaceId, reservationData) => {
         space={selectedSpace}
         onSubmit={(reservationData) => handleReservationSubmit(selectedSpace.id, reservationData)}
       />
-
     </>
   );
 }

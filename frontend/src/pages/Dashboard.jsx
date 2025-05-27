@@ -13,6 +13,7 @@ import MyBookings from '../components/MyBookings';
 import Profile from "../pages/Profile";
 import AdminSpaces from '../components/admin/AdminSpaces/AdminSpaces';
 import AdminStats from '../components/admin/AdminStats';
+import { useGlobalRefresh } from '../context/useGlobalRefresh';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ export default function Dashboard() {
 
   const urlTab = parseInt(searchParams.get('tab')) || 0;
   const [selectedTab, setSelectedTab] = useState(urlTab);
+const { triggerGlobalRefresh } = useGlobalRefresh();
 
   useEffect(() => {
     const currentURLTab = parseInt(searchParams.get('tab')) || 0;
@@ -31,6 +33,7 @@ export default function Dashboard() {
   const handleTabChange = (index) => {
     setSelectedTab(index);
     setSearchParams({ tab: index });
+    triggerGlobalRefresh();
   };
 
   // ⚠️ Pestañas base

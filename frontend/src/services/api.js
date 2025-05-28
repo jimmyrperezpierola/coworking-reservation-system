@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // 1. Configuración básica
-const API_URL = 'http://localhost:5000'; // Ajusta según tu backend
+//const API_URL = 'http://localhost:5000'; // Ajusta según tu backend
+const API_URL =import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // 2. Guardar token
 const saveToken = (token) => {
@@ -180,6 +181,31 @@ export const deleteSpace = async (spaceId) => {
     throw error;
   }
 };
+
+export const getSpaceAvailability = async (spaceId) => {
+  try {
+    const res = await axios.get(`${API_URL}/spaces/${spaceId}/availability`, getAuthHeader());
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching availability:', error);
+    throw error;
+  }
+};
+
+export const checkAvailability = async (spaceId, start_time, end_time) => {
+  try {
+    const res = await axios.get(`${API_URL}/spaces/${spaceId}/check-availability`, {
+      params: { start_time, end_time },
+      ...getAuthHeader()
+    });
+    return res.data.available;
+  } catch (error) {
+    console.error('Error checking availability:', error);
+    return false;
+  }
+};
+
+
 
 const api = axios;
 export default api;

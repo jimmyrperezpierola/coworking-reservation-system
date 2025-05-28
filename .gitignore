@@ -1,12 +1,62 @@
-backend/.env
-backend/console.error('Error
-backend/console.error('❌
-backend/console.log('Total
-backend/console.log('✅
-/backend/node_modules
-backend/package.json
-backend/package-lock.json
+# ---- GLOBAL ----
+.DS_Store
+Thumbs.db
 
-frontend/node_modules
-frontend/package-lock.json
-frontend/{
+# ---- BACKEND ----
+backend/node_modules/
+#backend/.env
+backend/.env.local
+backend/.env.development
+backend/.env.test
+#backend/.env.production
+backend/npm-debug.log*
+backend/yarn-debug.log*
+backend/yarn-error.log*
+backend/dist/
+backend/coverage/
+
+# Logs
+backend/logs
+backend/*.log
+backend/pids
+backend/tmp/
+
+# Sequelize
+backend/migrations/
+backend/seeders/
+
+# ---- FRONTEND (Vite + React) ----
+frontend/node_modules/
+#frontend/.env
+frontend/.env.local
+frontend/.env.development
+frontend/.env.test
+#frontend/.env.production
+frontend/.vite
+frontend/dist/
+frontend/build/
+frontend/coverage/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.parcel-cache
+
+# Editor / IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# System
+*.bak
+*.tmp
+*.temp
+
+# ---- GIT ----
+*.orig
+*.rej
+*.patch
+

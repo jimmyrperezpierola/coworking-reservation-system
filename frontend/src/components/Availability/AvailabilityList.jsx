@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react';
-import { SimpleGrid, Box, Button, Text, Spinner, useDisclosure, useToast } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
+import {
+  SimpleGrid,
+  Box,
+  Button,
+  Text,
+  Spinner,
+  useDisclosure,
+  useToast
+} from '@chakra-ui/react';
 import { useAuth } from '../../context/useAuth';
 import { useGlobalRefresh } from '../../context/useGlobalRefresh';
 import ReservationModal from './ReservationModal';
+import AvailabilityModal from './AvailabilityModal';
 import styles from '../../styles/AvailabilityList.module.css';
 
-import { getEnabledSpaces, reserveSpace } from '../../services/api'; // Ajusta path si es necesario
+import { getEnabledSpaces, reserveSpace } from '../../services/api';
+import { checkAvailability } from '../../services/api';
 
 export default function AvailabilityList() {
   const { token, user } = useAuth();
@@ -13,13 +24,25 @@ export default function AvailabilityList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSpace, setSelectedSpace] = useState(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [availabilitySpace, setAvailabilitySpace] = useState(null);
+  const {
+    isOpen: isReservationOpen,
+    onOpen: openReservation,
+    onClose: closeReservation
+  } = useDisclosure();
+  const {
+    isOpen: isAvailabilityOpen,
+    onOpen: openAvailability,
+    onClose: closeAvailability
+  } = useDisclosure();
+
   const toast = useToast();
   const { refreshToken, triggerGlobalRefresh } = useGlobalRefresh();
+  const navigate = useNavigate();
 
   const fetchSpaces = async () => {
     try {
-      const data = await getEnabledSpaces(token);
+      const data = await getEnabledSpaces();
       setSpaces(data);
     } catch (err) {
       setError(err.response?.data?.message || 'Error al cargar espacios');
@@ -48,56 +71,33 @@ export default function AvailabilityList() {
       return;
     }
     setSelectedSpace(space);
-    onOpen();
+    openReservation();
   };
 
 const handleReservationSubmit = async (spaceId, reservationData) => {
-  if (!spaceId) {
+  const { start_time, end_time } = reservationData;
+
+  const available = await checkAvailability(spaceId, start_time, end_time);
+  if (!available) {
     toast({
-      title: 'Error interno',
-      description: 'ID del espacio no encontrado',
-      status: 'error',
+      title: 'Espacio ocupado',
+      description: 'Ya no está disponible en ese horario. Por favor elige otro.',
+      status: 'error'
     });
+    closeReservation();
     return;
   }
 
-  try {
-    await axios.post(
-      `http://localhost:5000/spaces/${spaceId}/reserve`,
-      {
-        user_email: user.email,
+  navigate('/pago', {
+    state: {
+      reservation: {
+        space: selectedSpace,
         ...reservationData
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    onClose();
-  } catch (err) {
-    console.error('Error al reservar:', err.response?.data || err.message);
-    toast({
-      title: 'Error al reservar',
-      description: err.response?.data?.error || err.response?.data?.details || err.message,
-      status: 'error',
-    });
-  }
-};
-
-    try {
-      await reserveSpace(spaceId, { user_email: user.email, ...reservationData }, token);
-      toast({
-        title: '¡Reserva exitosa!',
-        status: 'success',
-      });
-      onClose();
-    } catch (err) {
-      console.error('Error al reservar:', err.response?.data || err.message);
-      toast({
-        title: 'Error al reservar',
-        description: err.response?.data?.error || err.response?.data?.details || err.message,
-        status: 'error',
-      });
+      }
     }
-  };
-
+  });
+  closeReservation();
+};
   if (loading) return <Spinner size="xl" thickness="4px" />;
   if (error) return <Text color="red.500">{error}</Text>;
 
@@ -109,9 +109,21 @@ const handleReservationSubmit = async (spaceId, reservationData) => {
             <Text fontWeight="bold" fontSize="lg">{space.name}</Text>
             <Text mt="2">Capacidad: {space.capacity}</Text>
             <Text>Precio: ${space.hourly_rate}/h</Text>
-            <Button 
-              colorScheme="blue" 
-              mt="4" 
+            <Button
+              colorScheme="green"
+              mt="4"
+              size="sm"
+              mr="2"
+              onClick={() => {
+                setAvailabilitySpace(space);
+                openAvailability();
+              }}
+            >
+              Disponibilidad
+            </Button>
+            <Button
+              colorScheme="blue"
+              mt="4"
               size="sm"
               onClick={() => handleReserveClick(space)}
             >
@@ -122,10 +134,16 @@ const handleReservationSubmit = async (spaceId, reservationData) => {
       </SimpleGrid>
 
       <ReservationModal
-        isOpen={isOpen}
-        onClose={onClose}
+        isOpen={isReservationOpen}
+        onClose={closeReservation}
         space={selectedSpace}
         onSubmit={(reservationData) => handleReservationSubmit(selectedSpace.id, reservationData)}
+      />
+
+      <AvailabilityModal
+        isOpen={isAvailabilityOpen}
+        onClose={closeAvailability}
+        space={availabilitySpace}
       />
     </>
   );

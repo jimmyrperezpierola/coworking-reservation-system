@@ -1,13 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
   ModalCloseButton,
-  RadioGroup,
-  Radio,
-  Stack,
   ModalBody,
   ModalFooter,
   FormControl,
@@ -15,17 +12,21 @@ import {
   Input,
   Button,
   Text,
-  useToast
+  useToast,
 } from '@chakra-ui/react';
-import { format, addHours } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
+import { format, addHours, differenceInMinutes } from 'date-fns';
 
 export default function ReservationModal({ isOpen, onClose, space, onSubmit }) {
   const [startTime, setStartTime] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
   const [endTime, setEndTime] = useState(format(addHours(new Date(), 1), "yyyy-MM-dd'T'HH:mm"));
   const toast = useToast();
 
-  const navigate = useNavigate();
+  const totalCost = useMemo(() => {
+    if (!space) return 0;
+    const minutes = differenceInMinutes(new Date(endTime), new Date(startTime));
+    const hours = Math.ceil(minutes / 60);
+    return (hours * parseFloat(space.hourly_rate)).toFixed(2);
+  }, [startTime, endTime, space]);
 
   const handleSubmit = () => {
     if (new Date(endTime) <= new Date(startTime)) {
@@ -36,20 +37,13 @@ export default function ReservationModal({ isOpen, onClose, space, onSubmit }) {
       });
       return;
     }
-    localStorage.setItem('reservationData', JSON.stringify({
-      start_time: new Date(startTime).toISOString(),
-      end_time: new Date(endTime).toISOString(),
-      payment_method: paymentMethod
-    }));
+
     onSubmit({
       start_time: new Date(startTime).toISOString(),
       end_time: new Date(endTime).toISOString(),
-      payment_method: paymentMethod
+      total_cost: parseFloat(totalCost)
     });
-    navigate('/Confirmacion');
   };
-
-  const [paymentMethod, setPaymentMethod] = useState("Efectivo");
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -75,28 +69,16 @@ export default function ReservationModal({ isOpen, onClose, space, onSubmit }) {
               onChange={(e) => setEndTime(e.target.value)}
             />
           </FormControl>
-          <FormControl as="fieldset" mb="4">
-            <FormLabel as="legend">Método de Pago</FormLabel>
-            <RadioGroup
-              value={paymentMethod}
-              onChange={setPaymentMethod}
-            >
-              <Stack direction="row">
-                <Radio value="Efectivo">Efectivo</Radio>
-                <Radio value="QR">QR</Radio>
-              </Stack>
-            </RadioGroup>
-          </FormControl>
+          <Text fontWeight="bold" fontSize="lg" mt="3">
+            Total a pagar: ${totalCost}
+          </Text>
         </ModalBody>
         <ModalFooter>
           <Button variant="outline" mr={3} onClick={onClose}>
             Cancelar
           </Button>
-          <Button colorScheme="blue" onClick={() => {
-            localStorage.setItem('reservationSpaceName', space?.name || '');
-            handleSubmit();
-          }}>
-            Confirmar Reserva
+          <Button colorScheme="blue" onClick={handleSubmit}>
+            Pagar Reserva
           </Button>
         </ModalFooter>
       </ModalContent>

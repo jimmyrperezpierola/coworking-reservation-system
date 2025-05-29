@@ -18,6 +18,7 @@ import AvailabilityPage from './pages/AvailabilityPage';
 import MyBookings from './components/MyBookings';
 import theme from './theme';
 import NotFound from './pages/NotFound';
+import PagoReserva from './pages/PagoReserva';
 import Confirmacion from './pages/ConfirmacionReserva';
 import Exito from './pages/Exito';
 
@@ -43,6 +44,7 @@ function App() {
                     <Route path="/reservas" element={<MyBookings />} />
                     <Route path="/perfil" element={<Profile />} />
                     <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/pago" element={<PagoReserva />} />
                     <Route path="/confirmacion" element={<Confirmacion />} />
                     <Route path="/exito" element={<Exito />} />
 

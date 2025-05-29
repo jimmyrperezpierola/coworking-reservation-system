@@ -1,0 +1,20 @@
+# Usa una imagen base de Node.js para Linux
+FROM node:18-alpine
+
+# Directorio de trabajo
+WORKDIR /app
+
+# Copiar solo los archivos necesarios para instalar dependencias
+COPY package*.json ./
+
+# Instalar dependencias DENTRO del contenedor (esto reconstruye bcrypt para Linux)
+RUN npm install
+
+# Ahora copia el resto del código fuente
+COPY . .
+
+# Puerto usado por tu backend
+EXPOSE 5000
+
+# Comando para iniciar la aplicación
+CMD ["node", "src/server.js"]

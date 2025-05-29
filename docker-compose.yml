@@ -1,0 +1,76 @@
+services:
+
+  db:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_DB: coworking
+      POSTGRES_USER: coworking_user
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coworking_user -d coworking"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile-linux
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_NAME: coworking
+      DB_USER: coworking_user
+      DB_PASS: password123
+      DB_PORT: 5432
+      NODE_ENV: development
+      JWT_SECRET: supersecreto123
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  init-db:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile-linux
+    command: ["npm", "run", "create-admin"]
+    environment:
+      DB_HOST: db
+      DB_NAME: coworking
+      DB_USER: coworking_user
+      DB_PASS: password123
+      DB_PORT: 5432
+      JWT_SECRET: supersecreto123
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: no
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile-dev
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - VITE_API_URL=http://backend:5000  # ⬅️ CORREGIDO: usar nombre del servicio, no host.docker.internal
+    depends_on:
+      - backend
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - "8899:8080"  # Accedes vía http://localhost:8080
+    restart: unless-stopped
+    depends_on:
+      - db
+volumes:
+  postgres_data:

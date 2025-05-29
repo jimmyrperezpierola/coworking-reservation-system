@@ -1,0 +1,22 @@
+# Carpetas a ignorar
+node_modules/
+.git
+.env
+logs/
+tmp/
+
+# Archivos de desarrollo
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Configuraciones de IDEs
+.vscode/
+.idea/
+*.iml
+
+# Otros
+Dockerfile*
+README.md
+LICENSE

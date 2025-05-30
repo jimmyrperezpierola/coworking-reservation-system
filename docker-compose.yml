@@ -61,7 +61,7 @@ services:
     volumes:
       - ./frontend:/app
     environment:
-      - VITE_API_URL=http://backend:5000  # ⬅️ CORREGIDO: usar nombre del servicio, no host.docker.internal
+      - VITE_API_URL=http://backend:5000  
     depends_on:
       - backend
   adminer:

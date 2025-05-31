@@ -13,8 +13,8 @@ jobs:
       postgres:
         image: postgres:14
         env:
-          POSTGRES_USER: root
-          POSTGRES_PASSWORD: StrongRootPassword123!
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
           POSTGRES_DB: test_db
         ports:
           - 5433:5432

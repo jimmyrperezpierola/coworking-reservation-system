@@ -7,7 +7,7 @@ backend/node_modules/
 #backend/.env
 backend/.env.local
 backend/.env.development
-backend/.env.test
+#backend/.env.test
 #backend/.env.production
 backend/npm-debug.log*
 backend/yarn-debug.log*
@@ -21,9 +21,9 @@ backend/*.log
 backend/pids
 backend/tmp/
 
-# Sequelize
-backend/migrations/
-backend/seeders/
+#Postgres
+
+postgres/data/
 
 # ---- FRONTEND (Vite + React) ----
 frontend/node_modules/

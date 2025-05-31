@@ -1,22 +1,35 @@
-// backend/src/db.js
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+const config = require('../config/config');
+
+// Obtener entorno actual
+const env = process.env.NODE_ENV || 'development';
+const envConfig = config[env];
+
+// Verificar si tenemos configuración
+if (!envConfig) {
+  throw new Error(`Configuración no encontrada para entorno: ${env}`);
+}
+
+console.log(`✅ Configuración cargada para entorno: ${env}`);
+console.log(`Base de datos: ${envConfig.database}`);
 
 const sequelize = new Sequelize({
-  database: process.env.DB_NAME,
-  username: process.env.DB_USER,
-  password: process.env.DB_PASS,
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  dialect: 'postgres',
-  logging: false,
+  database: envConfig.database,
+  username: envConfig.username,
+  password: envConfig.password,
+  host: envConfig.host,
+  port: envConfig.port,
+  dialect: envConfig.dialect,
+  logging: envConfig.logging
 });
 
-sequelize.authenticate()
-  .then(() => console.log('✅ Conexión a PostgreSQL exitosa'))
-  .catch(err => console.error('❌ Error de conexión:', err));
+// Solo autenticar en desarrollo (no en pruebas)
+if (env === 'development') {
+  sequelize.authenticate()
+    .then(() => console.log('✅ Conexión a PostgreSQL exitosa'))
+    .catch(err => console.error('❌ Error de conexión:', err));
+}
 
-module.exports = sequelize; // ✅ solo la instancia
-
+module.exports = sequelize;
 
 

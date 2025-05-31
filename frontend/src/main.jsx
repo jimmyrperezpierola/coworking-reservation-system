@@ -6,7 +6,7 @@ import { GlobalRefreshProvider } from './context/GlobalRefreshContext';
 import App from './App';
 import AuthProvider from './context/AuthProvider';
 
-// Configuración CORREGIDA del tema
+// Configuración del tema
 const theme = extendTheme({
   colors: {
     brand: {
@@ -15,7 +15,7 @@ const theme = extendTheme({
       200: '#bcccdc',
       300: '#9fb3c8',
       400: '#829ab1',
-      500: '#2c3e50', // Color azul principal
+      500: '#2c3e50',
       600: '#243b53',
       700: '#1d2d3f',
       800: '#16202b',
@@ -36,7 +36,7 @@ const theme = extendTheme({
         primary: {
           bg: 'brand.500',
           color: 'white',
-          _hover: { bg: 'brand.600' }, // Corregido de 'brand.608' a 'brand.600'
+          _hover: { bg: 'brand.600' }, 
         },
       },
     },
@@ -55,7 +55,7 @@ const theme = extendTheme({
   },
 });
 
-// Renderizado corregido
+// Renderizado
 const root = createRoot(document.getElementById('root'));
 
 root.render(

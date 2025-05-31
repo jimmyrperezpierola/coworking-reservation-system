@@ -3,10 +3,17 @@ const cors = require('cors');
 const app = express();
 
 app.use(express.json());
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000', credentials: true }));
+app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
 
 // Importar rutas
 const authRoutes = require('./routes/authRoutes');
+
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'Bienvenido a la API de reservas de espacios coworking',
+    version: '1.0.0'
+  });
+});
 
 // Rutas montadas
 app.use('/auth', authRoutes); // ✔️ rutas modernas: /auth/login

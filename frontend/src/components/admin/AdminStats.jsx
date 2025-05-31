@@ -16,7 +16,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { getAdminStats } from '../../services/api'; // Ajusta el path si es necesario
+import { getAdminStats } from '../../services/api'; 
 
 export default function AdminStats() {
   const [stats, setStats] = useState(null);

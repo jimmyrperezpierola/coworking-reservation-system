@@ -7,7 +7,7 @@ import {
 } from '@chakra-ui/react';
 
 import { useGlobalRefresh } from "../context/useGlobalRefresh";
-import { getUserReservations, cancelReservation } from '../../src/services/api'; // Ajusta el path si es necesario
+import { getUserReservations, cancelReservation } from '../../src/services/api'; 
 
 export default function MyBookings() {
   const [reservations, setReservations] = useState([]);

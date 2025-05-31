@@ -5,7 +5,7 @@ export const ProtectedRoute = ({ isAuthenticated }) => {
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-// Componente AdminRoute (ejemplo)
+// Componente AdminRoute
 export const AdminRoute = ({ isAdmin }) => {
   return isAdmin ? <Outlet /> : <Navigate to="/" replace />;
 };

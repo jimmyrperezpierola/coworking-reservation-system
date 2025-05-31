@@ -10,7 +10,7 @@ import { EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons';
 
 import { useGlobalRefresh } from "../../../context/useGlobalRefresh";
 import SpaceForm from './SpaceForm';
-import { getSpaces, updateSpaceStatus, deleteSpace } from '../../../services/api'; // ajusta el path si es necesario
+import { getSpaces, updateSpaceStatus, deleteSpace } from '../../../services/api'; 
 
 const AdminSpaces = () => {
   const [spaces, setSpaces] = useState([]);

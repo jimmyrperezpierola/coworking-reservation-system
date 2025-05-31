@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { SimpleGrid, Box, Button, Text, Spinner } from '@chakra-ui/react';
 import { useAuth } from '../context/useAuth';
 import { useGlobalRefresh } from '../../context/useGlobalRefresh';
-import { getEnabledSpaces } from '../../api'; // Ajusta el path según tu estructura
+import { getEnabledSpaces } from '../../api'; 
 
 export default function AvailabilityList() {
   const { token } = useAuth();

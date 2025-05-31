@@ -1,3 +1,4 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 # 🏢 Coworking App – Dockerized Full Stack Setup
 
 Proyecto full-stack para gestión de espacios de coworking con:
@@ -26,36 +27,27 @@ Proyecto full-stack para gestión de espacios de coworking con:
 
 ### Levantar todo
 
-```bash
+bash
 docker compose up -d --build
 
-
 ## Ver logs
-```bash
+bash
 docker compose logs -f
 
 ### Acceder a Adminer
 
 URL: http://localhost:8899
-
 Sistema: PostgreSQL
-
 Servidor: db
-
 Usuario: coworking_user
-
 Contraseña: password123
-
 Base de datos: coworking
 
 ## Notas importantes
 
 El frontend usa VITE_API_URL=/api, y NGINX lo proxyea internamente a http://backend:5000.
-
 El backend requiere una variable de entorno obligatoria: JWT_SECRET.
-
 El puerto de postgres en el host puede cambiar si hay conflicto (ej. usar 5433:5432).
-
 Si querés usar PgAdmin, podés integrarlo como servicio alternativo (ver más abajo).
 
 ## Agregar PgAdmin (opcional)
@@ -84,22 +76,19 @@ docker system prune -af # Limpia imágenes/volúmenes no usados
 
 ## Checklist de Funcionamiento
  Frontend accesible en http://localhost:3000
-
  Backend corriendo en http://localhost:5000
-
  Adminer operativo en http://localhost:8899
-
  Login funcionando correctamente
-
  Base conectada y operativa
-
  Variables de entorno funcionando (VITE_API_URL, JWT_SECRET)
-
  Docker funcionando 
 
  ##  Autor y Créditos
 Desarrollado por Manuel Monterde; Jimmy Perez  
 Contacto: mmonterde.app@gmail.com  ; pila900@gmail.com
 Repositorio: https://github.com/jimmyperezpierola/coworking-reservation-system
+
+## Licencia
+Este proyecto está licenciado bajo la licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
 
 

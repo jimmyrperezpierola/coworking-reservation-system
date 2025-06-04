@@ -9,7 +9,6 @@ require('dotenv').config({
   override: true 
 });
 
-
 module.exports = {
   test: {
     username: process.env.DB_USER,
